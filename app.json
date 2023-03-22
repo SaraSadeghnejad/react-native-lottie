@@ -2,3 +2,350 @@
   "name": "lottieturtorial",
   "displayName": "lottieturtorial"
 }
+import MainIcon from '@components/ui/MainIcon'
+import PackagePuzzle, { PuzzleValues } from '@components/ui/PackagePuzzle'
+import { PuzzlePartsValues } from '@framework/types'
+import PropTypes from 'prop-types'
+import { useEffect, useRef, useState } from 'react'
+import { useTableContext } from 'src/context/useTableContext'
+import { DEFAULT_HOURS_INTERVAL } from './constants'
+import classNames from './styles.module.css'
+import type {
+  DayColumnPreviewProps,
+  DayHeaderPreviewProps,
+  EventPreviewProps,
+  EventsListProps,
+  HourPreviewProps,
+  HoursListProps,
+  TimeTableProps,
+} from './types'
+import {
+  getDefaultDayLabel,
+  getEventPositionStyles,
+  getRowHeight,
+} from './utils'
+import { getEventMediaPositionStyles } from './utilsMobile'
+export const DayHeaderPreview: React.FC<DayHeaderPreviewProps> = ({
+  day,
+  rowHeight,
+  ...otherProperties
+}) => {
+  return (
+    <div
+      {...otherProperties}
+      style={{ ...(otherProperties?.style || {}), height: `${rowHeight}px` }}
+    >
+      {getDefaultDayLabel(day)}
+    </div>
+  )
+}
+//Time
+let getGenTime = (timeString: string) => {
+  let H = +timeString.substr(0, 2)
+  let h = H % 24 || '00'
+  return (timeString = h + timeString.substr(2, 3))
+}
+function returnTimesInBetween(start: number, end: number) {
+  var timesInBetween = []
+  var startH = parseInt(start?.toString().split(':')[0])
+  var startM = parseInt(start?.toString().split(':')[1])
+  var endH = parseInt(end?.toString().split(':')[0])
+  var endM = parseInt(end?.toString().split(':')[1])
+
+  if (startM == 30) startH++
+  for (var i = startH; i < endH; i++) {
+    timesInBetween.push(i < 10 ? '0' + i + ':00' : i + ':00')
+    timesInBetween.push(i < 10 ? '0' + i + ':30' : i + ':30')
+  }
+  timesInBetween.push(endH + ':00')
+  if (endM == 30) timesInBetween.push(endH + ':30')
+  return timesInBetween.map(getGenTime)
+}
+//EndTime
+
+export const HourPreview: React.FC<HourPreviewProps> = ({
+  hour,
+  ...otherProperties
+}) => (
+  <div {...otherProperties} key={hour}>
+    {hour}
+  </div>
+)
+
+export const EventPreview: React.FC<EventPreviewProps> = ({
+  event,
+  defaultAttributes,
+  classNames,
+}) => {
+    const getPuzzleValue = (value: string): any => {
+      switch (value) {
+        case 'green':
+          return PuzzleValues.rightAnswer
+        case 'yellow':
+          return PuzzleValues.pending
+        case 'red':
+          return PuzzleValues.wrongAnswer
+        default:
+          return PuzzleValues.unanswered
+      }
+    }
+
+    const puzzle: PuzzlePartsValues = {
+      top: PuzzleValues.unanswered,
+      bottom: PuzzleValues.unanswered,
+      left: PuzzleValues.unanswered,
+    }
+
+    puzzle.left = getPuzzleValue(event?.puzzleValue?.advanced)
+    puzzle.top = getPuzzleValue(event?.puzzleValue?.beginner)
+    puzzle.bottom = getPuzzleValue(event?.puzzleValue?.school)
+ const { handleStatus, handleUpdate } = useTableContext()
+  return (
+    <div
+      {...defaultAttributes}
+      title={event?.name}
+      key={event?.id}
+      onClick={() =>
+        handleUpdate(event.startTime, event.endTime, event.slug, event.title)
+      }
+    >
+      <div className="absolute top-1 ">
+        {event?.status !== '' &&
+        event?.status !== undefined &&
+        event?.status !== 'done' ? (
+          <MainIcon
+            iconName="pen-to-square"
+            customClassName="text-darkOrange text-[1.5em] mr-[.3em]"
+          />
+        ) : (
+          <></>
+        )}
+      </div>
+      <div className="absolute top-[.1em] left-[.3em] cursor-pointer">
+        {event?.status === 'todo' ? (
+          <MainIcon
+            iconName="circle"
+            style={{ color: `#${event?.statusColor}` }}
+            customClassName={`text-[1.4em]`}
+            onClick={() => handleStatus(event?.id)}
+          />
+        ) : event?.status === 'done' ? (
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 15 15"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect
+              width="14.6059"
+              height="14.6059"
+              rx="7.30295"
+              fill={`#${event?.statusColor}`}
+            />
+            <path
+              d="M5.94647 8.73827C6.08545 8.60183 6.19413 8.49977 6.29863 8.3934C7.57979 7.07768 8.8613 5.76232 10.1432 4.44731C10.2882 4.28067 10.4664 4.14803 10.6657 4.05839C10.8255 3.99111 11.0029 3.98167 11.1686 4.03165C11.3344 4.08162 11.4787 4.18804 11.5779 4.33343C11.6903 4.4677 11.7554 4.63695 11.7628 4.81392C11.7702 4.99088 11.7194 5.16525 11.6187 5.30893C11.535 5.43631 11.4384 5.55409 11.3303 5.66025C9.81085 7.22594 8.29004 8.7902 6.76783 10.353C6.16905 10.9676 5.78345 10.9697 5.16795 10.3638C4.55245 9.75784 3.92649 9.14438 3.3089 8.52877C3.05915 8.27952 2.92853 7.97656 3.04034 7.61557C3.14484 7.28145 3.37996 7.02145 3.71227 7.03435C4.0025 7.05346 4.28022 7.16288 4.50856 7.34806C5.00493 7.76491 5.44591 8.24515 5.94647 8.73827Z"
+              fill="white"
+            />
+          </svg>
+        ) : (
+          <></>
+        )}
+      </div>
+      {event?.name !== '' ? (
+        <div className={classNames.puzzlePosition}>
+          <PackagePuzzle size="sm" value={puzzle} />
+        </div>
+      ) : (
+        <></>
+      )}
+      <span className={classNames.event_info}>{event?.name}</span>
+    </div>
+  )
+}
+
+export const EventsList = ({
+  events,
+  day,
+  hoursInterval,
+  rowHeight,
+  renderEvent,
+}: EventsListProps) => {
+ const windowWidth = useRef(window.innerWidth)
+  return (events[day] || []).map(event =>
+    renderEvent({
+      event,
+      defaultAttributes: {
+        className: `${classNames.event} ${classNames.type}`,
+        style: windowWidth.current<=480
+          ? getEventMediaPositionStyles({ event, hoursInterval, rowHeight })
+          : getEventPositionStyles({ event, hoursInterval, rowHeight }),
+      },
+      classNames,
+    }),
+  )
+}
+
+const DayColumnPreview = ({
+  events,
+  day,
+  index,
+  rowHeight,
+  renderDayHeader,
+  renderEvent,
+  hoursInterval,
+  headerAttributes,
+  bodyAttributes,
+}: DayColumnPreviewProps) => {
+ const windowWidth = useRef(window.innerWidth)
+  return (
+    <div
+      {...bodyAttributes}
+      className={`${classNames.day} ${day} ${bodyAttributes?.className || ''}`}
+      style={{
+        ...(bodyAttributes?.style || {}),
+        backgroundSize: `1px ${2 * rowHeight}px`,
+        width:
+          windowWidth.current<= 480
+            ? `calc((100% - 9rem) / ${Object.keys(events).length})`
+            : `calc((100% - 6rem) / ${Object.keys(events).length})`,
+      }}
+      key={`${day}-${index}`}
+    >
+      {renderDayHeader({
+        day,
+        rowHeight,
+        ...headerAttributes,
+        className: `${classNames.day_title} ${
+          headerAttributes?.className || ''
+        }`,
+      })}
+
+      {EventsList({
+        events,
+        day,
+        renderEvent,
+        hoursInterval,
+        rowHeight,
+      })}
+    </div>
+  )
+}
+
+export const HoursList = ({
+  hoursInterval,
+  rowHeight,
+  renderHour,
+}: HoursListProps) => {
+  return returnTimesInBetween(hoursInterval.from, hoursInterval.to).map(hour =>
+    renderHour({
+      hour: `${hour}`,
+      className: classNames.hour,
+      style: { height: `${rowHeight}px` },
+    }),
+  )
+}
+
+export const TimeTable = ({
+  events,
+  hoursInterval = DEFAULT_HOURS_INTERVAL,
+  timeLabel = 'Time',
+  renderDayHeader = DayHeaderPreview,
+  renderEvent = EventPreview,
+  renderHour = HourPreview,
+  headerAttributes,
+  bodyAttributes,
+  ...otherProperties
+}: TimeTableProps) => {
+  const [dimensions, setDimensions] = useState({
+    width: global.window?.innerWidth,
+    height: global.window?.innerHeight,
+  })
+  const [rowHeight, setRowHeight] = useState<number>(0)
+  const ref = useRef(null)
+  const handleResize = () => {
+    setDimensions({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    })
+  }
+
+  useEffect(() => {
+    window.addEventListener('resize', handleResize, false)
+  }, [])
+
+  useEffect(() => {
+    if (ref.current) {
+      const totalHeight = (ref.current as HTMLDivElement).clientHeight
+      setRowHeight(
+         getRowHeight(hoursInterval.from, hoursInterval.to, totalHeight),
+
+      )
+    }
+  }, [hoursInterval, dimensions])
+
+  return (
+    <div
+      {...otherProperties}
+      className={`${classNames.time_table_wrapper} ${otherProperties.className}`}
+      ref={ref}
+    >
+      <div className={classNames.day}>
+        <div
+          {...headerAttributes}
+          className={`${classNames.day_title} ${
+            headerAttributes?.className || ''
+          }`}
+          style={{
+            ...(headerAttributes?.style || {}),
+            height: `${rowHeight}px`,
+          }}
+        >
+        
+            {timeLabel}
+       
+        </div>
+        {HoursList({ hoursInterval, renderHour, rowHeight })}
+      </div>
+
+      {Object.keys(events).map((day, index) =>
+        DayColumnPreview({
+          events,
+          day,
+          index,
+          rowHeight,
+          renderDayHeader,
+          renderEvent,
+          hoursInterval,
+          headerAttributes,
+          bodyAttributes,
+        }),
+      )}
+    </div>
+  )
+}
+
+TimeTable.propTypes = {
+  events: PropTypes.object.isRequired,
+  hoursInterval: PropTypes.shape({
+    from: PropTypes.number.isRequired,
+    to: PropTypes.number.isRequired,
+  }),
+  renderDayHeader: PropTypes.func,
+  renderHour: PropTypes.func,
+  renderEvent: PropTypes.func,
+  getDayLabel: PropTypes.func,
+  timeLabel: PropTypes.string,
+  headerAttributes: PropTypes.object,
+  bodyAttributes: PropTypes.object,
+}
+
+TimeTable.defaultProps = {
+  hoursInterval: DEFAULT_HOURS_INTERVAL,
+  timeLabel: 'Time',
+  renderDayHeader: DayHeaderPreview,
+  renderHour: HourPreview,
+  renderEvent: EventPreview,
+}
+
+export default TimeTable

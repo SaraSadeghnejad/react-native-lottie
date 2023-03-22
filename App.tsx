@@ -116,3 +116,75 @@ const styles = StyleSheet.create({
 });
 
 export default App;
+.time_table_wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  height: 100%;
+  margin: 0;
+  font-family: 'Open Sans', sans-serif;
+  color: #efefef;
+  overflow: hidden;
+}
+.time_table_wrapper:last-child{
+  height: 39px;
+}
+.day {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  position: relative;
+  background-color: #fff;
+}
+.day:first-child {
+  background: url('../../../assets/images/time-table.svg') top right no-repeat;
+  width: 4em;
+  margin-left: .2em;
+
+  /* @apply border-solid  border-0 border-l-superThin border-l-daphne */
+}
+@media (max-width:480px) {
+  .day:first-child {
+       background:none;
+      width: 1.5em;
+      margin-left: .1em;
+    }
+   .time_table_wrapper {
+          width: 32em;
+     }     
+}
+
+.hour {
+  @apply hidden
+}
+.hour:after {
+  @apply absolute content-['']  w-[1.5em] xs:border-dashed border-superThin mt-[.5em] border-daphne 
+}
+
+ .day_title {
+  background-color: #34495e;
+  font-size: .7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: none;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  z-index: 2;
+}
+ .event {
+  position: absolute;
+  font-size: .7em;
+  font-weight: 300;
+  justify-content: center;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.event_info {
+  @apply flex justify-center items-center text-[1.4em] font-yekanBakh font-bold h-[80px] xs:h-[48px] text-tableTitle
+}
+.puzzlePosition {
+  position: absolute;
+  bottom: .4em !important;
+  left: .6em !important;
+}
